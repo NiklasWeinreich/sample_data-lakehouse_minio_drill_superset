@@ -93,7 +93,7 @@ default_task_args = {
 }
 
 @task
-def extract_ElectricityProdex(**kwargs):
+def extract_gasProdex(**kwargs):
     """
     Produceret og import/export af el fra forskellige typer kilder
     hvert 5. minut
@@ -116,7 +116,7 @@ def extract_ElectricityProdex(**kwargs):
 
     print(params['start'], params['end'])
 
-    return pull_data(service, data_dir, 'ElectricityProdex', ts, page_size, params)
+    return pull_data(service, data_dir, 'gasProdex', ts, page_size, params)
     #https://api.energidataservice.dk/dataset/ElectricityProdex5MinRealtime?offset=0&start=2022-12-26T00:00&end=2022-12-27T00:00&sort=Minutes5UTC%20DESC&timezone=dk
 
 @task
@@ -132,7 +132,7 @@ def write_to_bucket(eProdex_jsons):
     import os
 
     # MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME")
-    MINIO_BUCKET_NAME = 'prodex'
+    MINIO_BUCKET_NAME = 'prodexgas'
     MINIO_ROOT_USER = os.getenv("MINIO_ROOT_USER")
     MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD")
 
@@ -172,7 +172,7 @@ def write_to_bucket(eProdex_jsons):
 
 
 @dag( 
-    dag_id='electrical_power_gross',
+    dag_id='electrical_power_gas',
     schedule=timedelta(minutes=5),
     start_date=pendulum.datetime(2023, 6, 1, 0, 0, 0, tz="Europe/Copenhagen"),
     catchup=True,
@@ -181,12 +181,12 @@ def write_to_bucket(eProdex_jsons):
     tags=['experimental', 'energy', 'rest api'],
     default_args=default_task_args,)
 def electrical_power_gross():
-    print("Doing energy_data")
+    print("Doing gas_data")
     setups()
     if __name__ != "__main__": # as in "normal" operation as DAG stated in Airflow
-        eProdex_jsons = extract_ElectricityProdex()
+        eProdex_jsons = extract_gasProdex()
     else: # more or less test mode
-        eProdex_jsons = extract_ElectricityProdex(ts=datetime.now().isoformat())
+        eProdex_jsons = extract_gasProdex(ts=datetime.now().isoformat())
     write_to_bucket(eProdex_jsons)
 
 @task
@@ -195,12 +195,12 @@ def extract_ElectricityProdex_back(**kwargs):
     Produceret og import/export af el fra forskellige typer kilder
     hent historisk data
 
-    https://www.energidataservice.dk/tso-electricity/ElectricityProdex5MinRealtime#metadata-info
+    https://api.energidataservice.dk/meta
     https://www.energidataservice.dk/guides/api-guides
     
     """
     global URL, data_dir, page_size
-    service = 'dataset/ElectricityProdex5MinRealtime'
+    service = 'https://api.energidataservice.dk/dataset/Gasflow?limit=5'
     
     params = {}
     #params['limit'] = 4
