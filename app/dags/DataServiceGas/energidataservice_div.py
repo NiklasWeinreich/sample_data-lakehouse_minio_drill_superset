@@ -82,7 +82,7 @@ def setups():
     There is an example `.env.example`, withou real sensible values."""
     global URL, data_dir, page_size
     URL = 'https://api.energidataservice.dk/'
-    data_dir = './dags/EnergiDataService/data'
+    data_dir = './dags/DataServiceGas/data'
     page_size = 1000
     
 
@@ -103,7 +103,7 @@ def extract_gasProdex(**kwargs):
 
     """
     global URL, data_dir, page_size
-    service = 'dataset/ElectricityProdex5MinRealtime'
+    service = 'dataset/Gasflow'
     
     params = {}
     #params['limit'] = 4
@@ -132,7 +132,7 @@ def write_to_bucket(eProdex_jsons):
     import os
 
     # MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME")
-    MINIO_BUCKET_NAME = 'prodexgas'
+    MINIO_BUCKET_NAME = 'gasprodex-data'
     MINIO_ROOT_USER = os.getenv("MINIO_ROOT_USER")
     MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD")
 
@@ -172,7 +172,7 @@ def write_to_bucket(eProdex_jsons):
 
 
 @dag( 
-    dag_id='electrical_power_gas',
+    dag_id='gas',
     schedule=timedelta(minutes=5),
     start_date=pendulum.datetime(2023, 6, 1, 0, 0, 0, tz="Europe/Copenhagen"),
     catchup=True,
@@ -200,7 +200,7 @@ def extract_ElectricityProdex_back(**kwargs):
     
     """
     global URL, data_dir, page_size
-    service = 'https://api.energidataservice.dk/dataset/Gasflow?limit=5'
+    service = 'dataset/Gasflow'
     
     params = {}
     #params['limit'] = 4
@@ -223,7 +223,7 @@ def extract_ElectricityProdex_back(**kwargs):
 
 
 @dag( 
-    dag_id='electrical_power_gross_back',
+    dag_id='power_gas_back',
     schedule='@monthly',
     #end_date=pendulum.datetime(2023, 6, 1, 0, 0, 0, tz="Europe/Copenhagen"),
     start_date=pendulum.datetime(2014, 12, 31, 23, 0, 0, tz="Europe/Copenhagen"),
